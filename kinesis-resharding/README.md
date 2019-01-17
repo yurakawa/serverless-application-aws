@@ -32,7 +32,8 @@ aws cloudwatch set-alarm-state --alarm-name kinesis-mon \
   --state-reason 'initializing' --state-value ALARM
 
 
-
+- resharding-functionに紐付ける IAMロールを作成
+aws iam create-role --role-name resharding_function_role --assume-role-policy-document file://trustpolicy.json
 
 # 大まかな手順
 - put-records.go で 15件kinesisに書き込む
