@@ -46,6 +46,8 @@ aws cloudwatch set-alarm-state --alarm-name kinesis-mon \
 
 ```
 aws iam create-role --role-name resharding_function_role --assume-role-policy-document file://trustpolicy.json
+aws iam put-role-policy --role-name resharding_function_role \
+--policy-name basic-permission \
+--policy-document file://permission.json
 ```
-
 
