@@ -21,15 +21,15 @@ func main(){
 		aws.NewConfig().WithRegion("ap-northeast-1"),
 	)
 
-	stream_name := "sample"
-	partition_key := uuid.New().String()
+	streamName := "kinesis-resharding-sample-stream"
+	partitionKey := uuid.New().String()
 	data := time.Now().Unix()
 
 	for i := 0; i < 15; i++ {
 		putOutput, err := k.PutRecord(&kinesis.PutRecordInput{
 			Data: []byte{byte(data)},
-			StreamName: aws.String(stream_name),
-			PartitionKey: aws.String(partition_key),
+			StreamName: aws.String(streamName),
+			PartitionKey: aws.String(partitionKey),
 		})
 
 		if err != nil {

@@ -3,7 +3,80 @@ Transform: AWS::Serverless-2016-10-31
 
 Resources:
   App:
+    DependsOn: "IAMRole"
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: "resharding-function"
       Handler: build/resharding-function
       Runtime: go1.x
+      Role: !GetAtt [ IAMRole, Arn ]
+  KinesisStream:
+    Type: "AWS::Kinesis::Stream"
+    Properties:
+      Name: kinesis-resharding-sample-stream
+      ShardCount: 1
+  SnsTopic:
+    DependsOn: "App"
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: kinesis-resharding-sample-sns
+      TopicName: kinesis-resharding-sample-topic
+      Subscription:
+        - Endpoint:
+            "Fn::GetAtt": [ "App", "Arn" ]
+          Protocol: lambda
+  CloudWatchalarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: kinesis-resharding-sample-kinesis-mon
+      MetricName: IncomingRecords
+      Namespace: AWS/Kinesis
+      Statistic: Sum
+      Period: 60
+      Threshold: 10
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: StreamName
+          Value:
+            Ref: "KinesisStream"
+      EvaluationPeriods: 1
+      AlarmActions:
+        - Ref: "SnsTopic"
+  IAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+  IAMPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: IAMPolicy
+      Roles:
+        - Ref: IAMRole
+      PolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Resource:
+              - "*"
+            Action:
+              - "cloudwatch:*"
+              - "logs:*"
+              - "kinesis:*"
+  LambdainvokePermission:
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - App
+          - Arn
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: SnsTopic
+    Type: AWS::Lambda::Permission
+

@@ -22,7 +22,6 @@ clean:
 build:
 	mkdir -p build
 	GOOS=linux GOARCH=amd64 go build -o build/$(functionName) ./$(functionName)
-	zip -r9 ~/$(functinName).zip build/$(functionName)
 
 package:
 	sam package --template-file template.yml \
@@ -38,5 +37,3 @@ deploy:
 				--capabilities CAPABILITY_IAM \
 				--region ap-northeast-1
 
-# describe-stack:
-# 	aws cloudformation describe-stack-resources --stack-name labmda-create-job
